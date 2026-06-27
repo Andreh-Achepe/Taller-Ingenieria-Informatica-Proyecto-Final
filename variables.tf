@@ -14,11 +14,7 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-variable "vpc_name" {
-  type        = string
-  description = "name of the vpc"
-  default     = "vpc_lab3"
-}
+
 
 variable "availability_zones" {
   type        = list(string)
@@ -29,11 +25,14 @@ variable "availability_zones" {
 variable "vpc_public_subnets" {
   type        = list(string)
   description = "List of all public subnets that we will need"
-  default     = ["10.0.1.0/24", "10.0.1.0/24"]
+  default     = ["10.0.1.0/24", "10.0.2.0/24"]
 }
 
 variable "vpc_private_subnets" {
   type        = list(string)
-  description = "List of al private subnets that probably we will not need"
-  default     = ["10.0.100.0/24", "10.0.100.0/24"]
+  description = "List of all private subnets that probably we will need"
+  default     = ["10.0.100.0/24", "10.0.200.0/24"]
 }
+
+
+
