@@ -6,6 +6,7 @@ variable "project" {
 variable "region" {
   type        = string
   description = "Region of the project"
+  default     = "us-east-1"
 }
 
 variable "vpc_cidr" {
@@ -13,8 +14,6 @@ variable "vpc_cidr" {
   description = "Range of local IP of the VPC"
   default     = "10.0.0.0/16"
 }
-
-
 
 variable "availability_zones" {
   type        = list(string)
@@ -35,4 +34,7 @@ variable "vpc_private_subnets" {
 }
 
 
-
+variable "ecr_image_uri" {
+  type        = string
+  description = "URI for the Docker image"
+}
