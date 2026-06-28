@@ -14,18 +14,19 @@ module "alb" {
       port     = 80
       protocol = "HTTP"
       forward = {
-        target_group_key = "ex-instance"
+        target_group_key = "web-fargate"
       }
     }
   }
 
   target_groups = {
-    ex-instance = {
-      name_prefix = "pagina"
-      protocol    = "HTTP"
-      port        = 80
-      target_type = "ip"
-      healt_check = {
+    web-fargate = {
+      name_prefix       = "${var.project}-target_groups"
+      protocol          = "HTTP"
+      port              = 80
+      target_type       = "ip"
+      create_attachment = false
+      health_check = {
         path = "/"
       }
     }
