@@ -97,3 +97,28 @@ output "s3_bucket_arn" {
   description = "ARN of the S3 bucket"
   value       = module.s3-bucket.s3_bucket_arn
 }
+
+
+# DynamoDB
+
+output "dynamodb_table_name" {
+  value       = module.dynamodb-table.dynamodb_table_id
+  description = "Name of dynamodb table"
+}
+
+output "dynamodb-table_arn" {
+  value       = module.dynamodb-table.dynamodb_table_arn
+  description = "ARN of dynamoDB table"
+}
+
+# lambda function
+
+output "lambda_function_name" {
+  value       = module.lambda.lambda_function_name
+  description = "Name of lamdba"
+}
+
+output "lambda_function_arn" {
+  value       = module.lambda.lambda_function_arn
+  description = "Arn of lambda function"
+}

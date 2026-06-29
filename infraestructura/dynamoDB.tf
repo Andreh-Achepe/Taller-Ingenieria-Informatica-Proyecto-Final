@@ -6,7 +6,7 @@ module "dynamodb-table" {
   hash_key = "id"
 
   attributes = [
-    { name = "id", type = "N" },
+    { name = "id", type = "S" },
     { name = "ramo", type = "S" }
   ]
 
