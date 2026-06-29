@@ -37,4 +37,5 @@ variable "vpc_private_subnets" {
 variable "ecr_image_uri" {
   type        = string
   description = "URI for the Docker image"
+  sensitive   = true
 }

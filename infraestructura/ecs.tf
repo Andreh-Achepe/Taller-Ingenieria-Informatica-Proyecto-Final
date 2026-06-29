@@ -19,7 +19,7 @@ module "ecs" {
       container_definitions = {
         web = {
           name  = "${var.project}-contenedor-cluster"
-          image = var.ecr_image_uri
+          image = nonsensitive(var.ecr_image_uri)
           portMappings = [{
             containerPort = 80
           }]
