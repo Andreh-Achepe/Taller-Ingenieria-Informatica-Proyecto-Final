@@ -21,12 +21,12 @@ module "ecs" {
           name  = "${var.project}-contenedor-cluster"
           image = nonsensitive(var.ecr_image_uri)
           portMappings = [{
-            containerPort = 80
+            containerPort = var.container_port
           }]
           readonlyRootFilesystem                 = false
-          enable_cloudwatch_logging              = true
+          enable_cloudwatch_logging              = var.cloudwatch_loggin
           create_cloudwatch_log_group            = true
-          cloudwatch_log_group_retention_in_days = 30
+          cloudwatch_log_group_retention_in_days = var.log_retention_days
         }
       }
 

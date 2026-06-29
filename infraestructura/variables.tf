@@ -72,3 +72,48 @@ variable "service_desired_count" {
   description = "Desired number of containers"
   default     = 2
 }
+
+variable "container_port" {
+  type        = number
+  description = "Desired port of the container"
+  default     = 80
+}
+
+variable "log_retention_days" {
+  type        = number
+  description = "Number of day that are available logs"
+  default     = 30
+}
+
+variable "cloudwatch_loggin" {
+  type        = bool
+  description = "Cloudwatch loggin"
+  default     = true
+}
+
+
+# ALB
+
+variable "alb_listener_port" {
+  type        = number
+  description = "port that the alb should listen"
+  default     = 80
+}
+
+variable "alb_protocol" {
+  type        = string
+  description = "Protocol of the ALB"
+  default     = "HTTP"
+}
+
+variable "health_check_path" {
+  type        = string
+  description = "Path where the ALB is gonna health check idk"
+  default     = "/"
+}
+
+variable "enable_deletion_protectoin" {
+  type        = bool
+  description = "Boolean that let the ALB be destroyed"
+  default     = false
+}
