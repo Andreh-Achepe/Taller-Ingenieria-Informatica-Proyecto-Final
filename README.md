@@ -20,7 +20,9 @@ git clone [reponame](PLACEHOLDER)
 
 cd infraestructura
 
-terraform init
+# En lugar de usar terraform init
+bash terraform_init.sh # Asi inyectamos flags manteniendo variables sin hardcodear
+
 
 terraform plan
 

@@ -15,6 +15,11 @@ variable "region" {
 variable "tags" {
   type        = map(string)
   description = "List of tag to make easier the job of identify the resources of the project"
+  default = {
+    "Project"    = "ULAGOS-TIN-LAB3"
+    "Terraform"  = "True"
+    "Enviroment" = "Dev"
+  }
 }
 
 # VPC

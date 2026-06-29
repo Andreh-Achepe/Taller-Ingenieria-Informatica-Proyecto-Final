@@ -21,11 +21,7 @@ module "iam_policy" {
       Resource = "*"
     }]
   })
-
-  tags = {
-    Terraform   = "true"
-    Environment = "dev"
-  }
+  tags = var.tags
 }
 
 module "iam_role" {
@@ -48,8 +44,5 @@ module "iam_role" {
     ecs_execution = module.iam_policy.arn
   }
 
-  tags = {
-    Terraform = "true"
-    Project   = var.project
-  }
+  tags = var.tags
 }
