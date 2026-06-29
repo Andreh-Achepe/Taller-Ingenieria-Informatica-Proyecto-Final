@@ -32,8 +32,5 @@ module "alb" {
     }
   }
 
-  tags = {
-    Project   = var.project
-    Terraform = "true"
-  }
+  tags = var.tags
 }

@@ -16,10 +16,7 @@ module "net_connections" {
   single_nat_gateway     = true
   enable_dns_hostnames   = true
   enable_dns_support     = true
-  tags = {
-    Project   = var.project
-    Terraform = "true"
-  }
+  tags                   = var.tags
 }
 module "security_group_alb" {
   source  = "terraform-aws-modules/security-group/aws"
@@ -50,10 +47,7 @@ module "security_group_alb" {
       cidr_ipv4   = "0.0.0.0/0"
     }
   }
-  tags = {
-    Project   = var.project
-    Terraform = "true"
-  }
+  tags = var.tags
 }
 
 module "security_group_priv" {
@@ -78,8 +72,5 @@ module "security_group_priv" {
       cidr_ipv4   = "0.0.0.0/0"
     }
   }
-  tags = {
-    Project   = var.project
-    Terraform = "true"
-  }
+  tags = var.tags
 }

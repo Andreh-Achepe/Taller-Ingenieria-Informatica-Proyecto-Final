@@ -10,8 +10,8 @@ module "ecs" {
       family                   = "${var.project}-service-cluster"
       network_mode             = "awsvpc"
       requires_compatibilities = ["FARGATE"]
-      cpu                      = 256
-      memory                   = 512
+      cpu                      = var.service_cpu
+      memory                   = var.service_memory
       # Impedimos errores al poner esta cuestion, basicamente le decimos que pondremos el rol fabricado por nosotros
       create_tasks_iam_role  = false
       task_exec_iam_role_arn = module.iam_role.arn
@@ -31,7 +31,7 @@ module "ecs" {
       }
 
       name          = "${var.project}-service"
-      desired_count = 2
+      desired_count = var.service_desired_count
       launch_type   = "FARGATE"
 
       subnet_ids         = module.net_connections.private_subnets
@@ -48,9 +48,6 @@ module "ecs" {
       wait_for_steady_state = true
     }
   }
-  tags = {
-    Project   = var.project
-    Terraform = "true"
-  }
+  tags = var.tags
 }
 

@@ -61,6 +61,15 @@ output "service_name" {
   value       = module.ecs.services["web"].name
 }
 
+output "ecs_cluster_arn" {
+  value       = module.ecs.cluster_arn
+  description = "Cluster ARN"
+}
+
+output "ecs_service_arn" {
+  value       = module.ecs.services["web"].id
+  description = "ARN of ECS service"
+}
 
 # IAM
 
