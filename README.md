@@ -5,18 +5,18 @@
 - [Benjamin Alberto Martinez Hernandez](https://github.com/ELBA21)
 - [Andres Hernandez Perez](https://github.com/Andreh-Achepe)
 
-## Tecnologias (PLACEHOLDER)
+## Tecnologias
 
 - **Cloud**: AWS
-- Web: Anti-Turismo Puerto Montt
+- Web: Proyecto Final
 - Otros: Docker
 
-## Intrucciones (PLACEHOLDER)
+## Intrucciones
 
 Clonar repositorio
 
 ```bash
-git clone [reponame](PLACEHOLDER)
+git clone
 
 cd infraestructura
 
@@ -31,6 +31,6 @@ terraform apply
 terraform destroy
 ```
 
-## Sitio Web (PLACEHOLDER)
+## Sitio Web (PLACEHOLDER) / Esperando HITO 2
 
 [Anti-Turismo Puerto Montt](http://web-alb-1431233602.us-east-1.elb.amazonaws.com)
