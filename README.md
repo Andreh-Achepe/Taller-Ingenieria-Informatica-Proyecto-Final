@@ -45,4 +45,4 @@ Sistema de subida y organización inteligente de apuntes universitarios.
 - **DynamoDB**: Guarda metadatos (ramo, tags, autor, fecha) con índice por ramo
 - **ECS Fargate**: Frontend web para subir, buscar y descargar apuntes
 
-![Diagrama de ingraestructura del sitio](./infraestructura/Infraestructura.png)
+- La infraestructura levanta el sitio-web del laboratorio 2 como placeholder
