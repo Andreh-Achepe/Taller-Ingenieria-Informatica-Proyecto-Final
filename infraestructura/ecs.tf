@@ -42,7 +42,7 @@ module "ecs" {
         web = {
           target_group_arn = module.alb.target_groups["web-fargate"].arn
           container_name   = "${var.project}-contenedor-cluster"
-          container_port   = 80
+          container_port   = var.container_port
         }
       }
       wait_for_steady_state = true

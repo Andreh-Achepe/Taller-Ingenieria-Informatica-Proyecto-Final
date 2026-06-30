@@ -25,7 +25,7 @@ cd infraestructura
 # En lugar de usar terraform init
 bash terraform_init.sh # Asi inyectamos flags manteniendo variables sin hardcodear
 
-terraform ftm -recursive
+terraform fmt -recursive
 
 terraform validate
 

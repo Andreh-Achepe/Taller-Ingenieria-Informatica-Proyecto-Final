@@ -4,4 +4,4 @@ terraform.tfstate.backup
 terraform.tfvars
 crash.log
 .tinit.env
-
+builds/
