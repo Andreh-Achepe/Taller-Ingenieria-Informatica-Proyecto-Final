@@ -22,7 +22,7 @@ variable "tags" {
   }
 }
 
-# VPC
+# network
 variable "vpc_cidr" {
   type        = string
   description = "Range of local IP of the VPC"
@@ -45,6 +45,30 @@ variable "vpc_private_subnets" {
   type        = list(string)
   description = "List of all private subnets that probably we will need"
   default     = ["10.0.100.0/24", "10.0.200.0/24"]
+}
+
+variable "enable_nat_gateway" {
+  type        = bool
+  description = "True/False for nat gateway"
+  default     = true
+}
+
+variable "single_nat_gateway" {
+  type        = bool
+  description = "For one single internet gateway"
+  default     = true
+}
+
+variable "enable_dns_hostnames" {
+  type        = bool
+  description = "Allow the use of DNS"
+  default     = true
+}
+
+variable "enable_dns_support" {
+  type        = bool
+  description = "Allow dns support"
+
 }
 
 #  ECS
@@ -117,3 +141,13 @@ variable "enable_deletion_protectoin" {
   description = "Boolean that let the ALB be destroyed"
   default     = false
 }
+
+
+# Lambda
+variable "lambda_runtime" {
+  type        = string
+  description = "runtime for lambda function"
+  default     = "python3.12"
+}
+
+

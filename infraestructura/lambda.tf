@@ -5,7 +5,7 @@ module "lambda" {
   function_name = "${lower(var.project)}-function"
   description   = "Lambda para subir archivos a S3 y guardar referencia en DynamoDB"
   handler       = "index.handler"
-  runtime       = "python3.12"
+  runtime       = var.lambda_runtime
   source_path   = "${path.module}/lambda"
 
   environment_variables = {

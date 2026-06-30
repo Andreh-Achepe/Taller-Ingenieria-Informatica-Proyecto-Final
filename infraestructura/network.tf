@@ -11,11 +11,11 @@ module "net_connections" {
   private_subnets = var.vpc_private_subnets
 
 
-  enable_nat_gateway     = true
+  enable_nat_gateway     = var.enable_nat_gateway
   one_nat_gateway_per_az = false
-  single_nat_gateway     = true
-  enable_dns_hostnames   = true
-  enable_dns_support     = true
+  single_nat_gateway     = var.single_nat_gateway
+  enable_dns_hostnames   = var.enable_dns_hostnames
+  enable_dns_support     = var.enable_dns_support
   tags                   = var.tags
 }
 module "security_group_alb" {
