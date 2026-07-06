@@ -122,3 +122,18 @@ output "lambda_function_arn" {
   value       = module.lambda.lambda_function_arn
   description = "Arn of lambda function"
 }
+
+
+
+# ses 
+
+
+output "ses_domain_identify_arn" {
+  value       = module.ses.ses_domain_identity_arn
+  description = "ARN of the ses domain identity"
+}
+
+output "ses_dkim_tokens" {
+  value       = module.ses.ses_dkim_tokens
+  description = "DKIM tokens for DNS verification"
+}

@@ -150,4 +150,9 @@ variable "lambda_runtime" {
   default     = "python3.12"
 }
 
+variable "ses_domain" {
+  type        = string
+  description = "Domain name for the mail address"
+  default     = "test.com"
 
+}
