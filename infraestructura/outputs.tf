@@ -123,11 +123,13 @@ output "lambda_function_arn" {
   description = "Arn of lambda function"
 }
 
+output "booking_function_url" {
+  value       = module.lambda_booking.lambda_function_url
+  description = "USR publica para el formulario de reserva"
+}
 
 
 # ses 
-
-
 output "ses_domain_identify_arn" {
   value       = module.ses.ses_domain_identity_arn
   description = "ARN of the ses domain identity"

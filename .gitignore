@@ -5,3 +5,5 @@ terraform.tfvars
 crash.log
 .tinit.env
 builds/
+.venv
+.env

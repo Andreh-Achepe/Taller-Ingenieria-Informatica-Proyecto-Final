@@ -156,3 +156,8 @@ variable "ses_domain" {
   default     = "test.com"
 
 }
+
+variable "sender_email" {
+  type        = string
+  description = "Email remitente para confirmaciones de booking"
+}
