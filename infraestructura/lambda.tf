@@ -80,3 +80,42 @@ module "lambda_booking" {
   }
   tags = var.tags
 }
+
+module "lambda_testimonios" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 8.8.0"
+
+  function_name = "${lower(var.project)}-testimonios"
+  description   = "Gestiona testimonios de clientes"
+  handler       = "testimonios.handler"
+  runtime       = var.lambda_runtime
+  source_path   = "${path.module}/lambda"
+
+  create_lambda_function_url = true
+  authorization_type         = "NONE"
+  cors = {
+    allow_origins = ["*"]
+    allow_methods = ["GET", "POST"]
+    allow_headers = ["Content-Type"]
+  }
+
+  environment_variables = {
+    BUCKET_NAME = module.s3-bucket.s3_bucket_id
+  }
+
+  attach_policy_statements = true
+  policy_statements = {
+    s3 = {
+      effect  = "Allow"
+      actions = ["s3:PutObject", "s3:GetObject", "s3:ListBucket"]
+      resources = [
+        module.s3-bucket.s3_bucket_arn,
+        "${module.s3-bucket.s3_bucket_arn}/*"
+      ]
+    }
+
+  }
+  tags = var.tags
+
+
+}

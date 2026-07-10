@@ -25,6 +25,7 @@ form.addEventListener("submit", async function(event) {
             },
         );
         const resultado = await respuesta.json();
+        console.log(resultado);
         if (respuesta.ok) {
             mensaje.style.color = "green";
             mensaje.textContent = "Reserva confirmada, revisa tu email";
@@ -34,58 +35,34 @@ form.addEventListener("submit", async function(event) {
             mensaje.textContent = "Error, algo salio mal";
         }
     } catch (err) {
+        console.error(err);
         mensaje.style.color = "red";
         mensaje.textContent = " Error de conexion";
     } finally {
         btn.disabled = false;
         btn.textContent = "Reservar";
     }
-
-    const resultado = await respuesta.json();
-    console.log(resultado);
 });
 
 // let comentarios = []; //ahora se llenará con lambda,
 
-const comentarios = [
-    {
-        nombre: "Camila",
-        fecha: "09/07/2026",
-        texto: "Muy buen recorrido.",
-        foto: "https://i.pravatar.cc/150?img=32",
-    },
-
-    {
-        nombre: "Felipe",
-        fecha: "09/07/2026",
-        texto:
-            "Lo mejor fue la cárcel. asdskj ajks jsa kjak jsdja kssjajk sdladwalijdnalwd wadn dakjsdj asjdkjaskj akjs djajska djkawj",
-        foto: "https://i.pravatar.cc/150?img=12",
-    },
-
-    {
-        nombre: "Javiera",
-        fecha: "09/07/2026",
-        texto: "Volvería nuevamente.",
-        foto: "https://i.pravatar.cc/150?img=48",
-    },
-
-    {
-        nombre: "Ignacio",
-        fecha: "09/07/2026",
-        texto: "Muy distinto a un tour normal.",
-        foto: "https://i.pravatar.cc/150?img=51",
-    },
-
-    {
-        nombre: "Valentina",
-        fecha: "09/07/2026",
-        texto: "Excelente experiencia.",
-        foto: "https://i.pravatar.cc/150?img=15",
-    },
-];
-
+let comentarios = [];
 let actual = 0;
+
+async function cargarTestimonios() {
+    try {
+        const resp = await fetch(
+            "https://ojoprmz2qi36mf6pio545lghmy0crqta.lambda-url.us-east-1.on.aws/",
+        );
+        comentarios = await resp.json();
+        actual = 0;
+    } catch {
+        console.error("No se pudieron cargar testimonios");
+    }
+    actualizar();
+}
+
+cargarTestimonios();
 
 const izquierda = document.querySelector(".testimonio-left");
 const centro = document.querySelector(".testimonio-center");
@@ -94,7 +71,7 @@ const derecha = document.querySelector(".testimonio-right");
 function cargar(card, dato) {
     card.innerHTML = `
 
-        <img src="${dato.foto}" alt="${dato.nombre}">
+        <img src="${dato.foto_url}" alt="${dato.nombre}">
 
         <div class="testimonio-info">
 
@@ -118,8 +95,6 @@ function actualizar() {
     cargar(derecha, comentarios[siguiente]);
 }
 
-actualizar();
-
 document.getElementById("testimonio-next").addEventListener("click", () => {
     actual = (actual + 1) % comentarios.length;
 
@@ -137,4 +112,52 @@ const formularioTestimonio = document.getElementById("formulario-testimonio");
 
 botonTestimonio.addEventListener("click", () => {
     formularioTestimonio.classList.toggle("oculto");
+});
+
+const btnEnviarTestimonio = document.getElementById("enviar-testimonio");
+
+btnEnviarTestimonio.addEventListener("click", async () => {
+    const nombre = document.getElementById("nombre-testimonio").value;
+    const texto = document.getElementById("texto-testimonio").value;
+    const fecha = document.getElementById("fecha-testimonio").value;
+    const fotoInput = document.getElementById("foto-testimonio");
+
+    if (!nombre || !texto || !fecha || !fotoInput.files[0]) {
+        alert("Completa todos los campos");
+        return;
+    }
+    btnEnviarTestimonio.disabled = true;
+    btnEnviarTestimonio.textContent = "Enviando...";
+
+    const file = fotoInput.files[0];
+    const reader = new FileReader();
+    reader.onload = async () => {
+        const foto_base64 = reader.result.split(",")[1];
+
+        try {
+            const resp = await fetch(
+                "https://ojoprmz2qi36mf6pio545lghmy0crqta.lambda-url.us-east-1.on.aws/",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nombre, texto, fecha, foto_base64 }),
+                },
+            );
+            const data = await resp.json();
+            if (resp.ok) {
+                alert("¡Testimonio enviado!");
+                formularioTestimonio.classList.add("oculto");
+                // Recargar testimonios
+                await cargarTestimonios();
+            } else {
+                alert("Error: " + (data.message || "algo salió mal"));
+            }
+        } catch {
+            alert("Error de conexion");
+        } finally {
+            btnEnviarTestimonio.disabled = false;
+            btnEnviarTestimonio.textContent = "Enviar";
+        }
+    };
+    reader.readAsDataURL(file);
 });
