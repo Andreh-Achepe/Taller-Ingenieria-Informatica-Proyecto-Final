@@ -17,7 +17,7 @@
                 Porque ya todos conocen Angelmó.
                 Nosotros te mostramos las cosas raras.
             </p>
-            <a href="#lugares" class="btn">Ver recorrido</a>
+            <a href="#lugarestitulo" class="btn">Ver recorrido</a>
         </div>
     </header>
 
@@ -35,6 +35,10 @@
             monumentos absurdos y rincones que sólo conocen quienes han
             vivido aquí durante años.
         </p>
+    </section>
+
+    <section class="lugarestitulo" id="lugarestitulo">
+        <h2>Lugares de interest</h2>
     </section>
 
     <section id="lugares">
@@ -218,6 +222,57 @@
         <div class="map-placeholder">
             <img src="img/ruta.jpg" alt="ruta">
         </div>
+    </section>
+
+    <section class="testimonios">
+
+        <h1>💀 Qué dicen los sobrevivientes 💀</h1>
+
+        <div class="testimonios-carousel">
+
+            <button id="testimonio-prev">❮</button>
+
+            <div class="testimonios-contenedor">
+
+                <div class="testimonio-card testimonio-left"></div>
+
+                <div class="testimonio-card testimonio-center"></div>
+
+                <div class="testimonio-card testimonio-right"></div>
+
+            </div>
+
+            <button id="testimonio-next">❯</button>
+
+        </div>
+
+        <div class="testimonios-footer">
+            <h3>¿Lograste salir con vida?</h3>
+            <p>¡Únete a esta secta! digo, a esta ¡selecta! colección de experiencias con el botoncito de abajo</p>
+            <button id="mostrar-formulario" class="btn-testimonio">Dejar mi experiencia</button>
+            <div id="formulario-testimonio" class="formulario-testimonio oculto">
+
+                <h3>Cuéntanos tu experiencia</h3>
+
+                <label>Nombre:</label>
+                <input id="nombre-testimonio" type="text" placeholder="Tu nombre">
+
+                <label>Foto:</label>
+                <input id="foto-testimonio" type="file" accept="image/*">
+
+                <label>Tu experiencia:</label>
+                <textarea id="texto-testimonio" placeholder="Escribe tu experiencia"></textarea>
+
+                <label>Fecha del trauma:</label>
+                <input id="fecha-testimonio" type="date">
+
+                <button id="enviar-testimonio" class="btn">
+                    Enviar
+                </button>
+
+            </div>
+        </div>
+
     </section>
 
     <section id="reserva" class="reserva">
