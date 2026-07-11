@@ -72,10 +72,10 @@ variable "enable_dns_support" {
 }
 
 #  ECS
-variable "ecr_image_uri" {
+variable "ecr_image_tag" {
   type        = string
-  description = "URI for the Docker image"
-  sensitive   = true
+  description = "Tag of docker image"
+
 }
 
 variable "service_cpu" {
@@ -154,7 +154,6 @@ variable "ses_domain" {
   type        = string
   description = "Domain name for the mail address"
   default     = "test.com"
-
 }
 
 variable "sender_email" {

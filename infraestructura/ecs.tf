@@ -1,3 +1,16 @@
+resource "aws_ecr_repository" "web" {
+  name                 = "${lower(var.project)}-web"
+  image_tag_mutability = "IMMUTABLE"
+  tags                 = var.tags
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+  encryption_configuration {
+    encryption_type = "KMS"
+  }
+}
+
 module "ecs" {
   source  = "terraform-aws-modules/ecs/aws"
   version = "~> 7.5.0"
@@ -19,7 +32,7 @@ module "ecs" {
       container_definitions = {
         web = {
           name  = "${var.project}-contenedor-cluster"
-          image = nonsensitive(var.ecr_image_uri)
+          image = "${aws_ecr_repository.web.repository_url}:${var.ecr_image_tag}"
           portMappings = [{
             containerPort = var.container_port
           }]
