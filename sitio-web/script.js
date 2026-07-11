@@ -14,16 +14,13 @@ form.addEventListener("submit", async function(event) {
         fecha: document.getElementById("fecha").value,
     };
     try {
-        const respuesta = await fetch(
-            "https://i6zid2olkgztgzm34ibksuofom0psqfk.lambda-url.us-east-1.on.aws/",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(datos),
+        const respuesta = await fetch("/api/booking", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
             },
-        );
+            body: JSON.stringify(datos),
+        });
         const resultado = await respuesta.json();
         console.log(resultado);
         if (respuesta.ok) {
@@ -51,9 +48,7 @@ let actual = 0;
 
 async function cargarTestimonios() {
     try {
-        const resp = await fetch(
-            "https://ojoprmz2qi36mf6pio545lghmy0crqta.lambda-url.us-east-1.on.aws/",
-        );
+        const resp = await fetch("/api/testimonios");
         comentarios = await resp.json();
         actual = 0;
     } catch {
@@ -135,14 +130,11 @@ btnEnviarTestimonio.addEventListener("click", async () => {
         const foto_base64 = reader.result.split(",")[1];
 
         try {
-            const resp = await fetch(
-                "https://ojoprmz2qi36mf6pio545lghmy0crqta.lambda-url.us-east-1.on.aws/",
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ nombre, texto, fecha, foto_base64 }),
-                },
-            );
+            const resp = await fetch("/api/testimonios", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre, texto, fecha, foto_base64 }),
+            });
             const data = await resp.json();
             if (resp.ok) {
                 alert("¡Testimonio enviado!");

@@ -78,6 +78,7 @@ module "lambda_booking" {
       resources = ["*"]
     }
   }
+
   tags = var.tags
 }
 
@@ -113,9 +114,30 @@ module "lambda_testimonios" {
         "${module.s3-bucket.s3_bucket_arn}/*"
       ]
     }
-
   }
+
   tags = var.tags
-
-
 }
+resource "aws_lambda_permission" "booking_alb" {
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_booking.lambda_function_name
+  principal     = "elasticloadbalancing.amazonaws.com"
+}
+
+resource "aws_lambda_permission" "testimonios_alb" {
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_testimonios.lambda_function_name
+  principal     = "elasticloadbalancing.amazonaws.com"
+}
+resource "aws_lb_target_group_attachment" "booking" {
+  depends_on       = [aws_lambda_permission.booking_alb]
+  target_group_arn = module.alb.target_groups["booking-lambda"].arn
+  target_id        = module.lambda_booking.lambda_function_arn
+}
+
+resource "aws_lb_target_group_attachment" "testimonios" {
+  depends_on       = [aws_lambda_permission.testimonios_alb]
+  target_group_arn = module.alb.target_groups["testimonios-lambda"].arn
+  target_id        = module.lambda_testimonios.lambda_function_arn
+}
+

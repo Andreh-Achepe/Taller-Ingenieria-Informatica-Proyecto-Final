@@ -9,6 +9,12 @@ sender = os.environ["SENDER_EMAIL"]
 
 
 def handler(event, context):
+    method = event.get("httpMethod", "POST")
+    if method != "POST":
+        return {
+            "statusCode": 405,
+            "body": json.dumps({"message": "Método no permitido"}),
+        }
     body = json.loads(event.get("body", "{}"))
 
     item = {

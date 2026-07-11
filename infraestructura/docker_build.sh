@@ -26,8 +26,8 @@ curl -sf http://localhost:8080 \
 docker kill $APP
 
 echo "Pusheando imagen"
-docker tag $APP:$TIMESTAMP $ECR_URI:$TIMESTAMP
-docker push $ECR_URI:$TIMESTAMP
+docker tag $APP:$TIMESTAMP $ECR_URI:latest
+docker push $ECR_URI:latest
 
 echo "Redeployando ECS"
 aws ecs update-service \
@@ -35,4 +35,3 @@ aws ecs update-service \
   --service ULAGOS-TIN-LAB3-service \
   --force-new-deployment \
   --region $REGION
-sed -i "s/ecr_image_tag = .*/ecr_image_tag = \"$TIMESTAMP\"/" terraform.tfvars

@@ -6,8 +6,7 @@ bucket = os.environ["BUCKET_NAME"]
 
 
 def handler(event, context):
-    method = event.get("requestContext", {}).get("http", {}).get("method", "GET")
-
+    method = event.get("httpMethod", "GET")
     if method == "POST":
         try:
             body = json.loads(event.get("body", "{}"))

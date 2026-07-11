@@ -16,9 +16,36 @@ module "alb" {
       forward = {
         target_group_key = "web-fargate"
       }
+      rules = {
+        booking = {
+          priority = 10
+          actions = [{
+            forward = {
+              target_group_key = "booking-lambda"
+            }
+          }]
+          conditions = [{
+            path_pattern = {
+              values = ["/api/booking"]
+            }
+          }]
+        }
+        testimonios = {
+          priority = 20
+          actions = [{
+            forward = {
+              target_group_key = "testimonios-lambda"
+            }
+          }]
+          conditions = [{
+            path_pattern = {
+              values = ["/api/testimonios*"]
+            }
+          }]
+        }
+      }
     }
   }
-
   target_groups = {
     web-fargate = {
       name_prefix       = "web"
@@ -29,6 +56,16 @@ module "alb" {
       health_check = {
         path = var.health_check_path
       }
+    }
+    booking-lambda = {
+      name_prefix       = "book"
+      target_type       = "lambda"
+      create_attachment = false
+    }
+    testimonios-lambda = {
+      name_prefix       = "test"
+      target_type       = "lambda"
+      create_attachment = false
     }
   }
 
