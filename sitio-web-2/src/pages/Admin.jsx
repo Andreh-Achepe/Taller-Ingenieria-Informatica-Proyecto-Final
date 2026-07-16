@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-const VACIO = { nombre: "", imagen: "", parrafo1: "", parrafo2: "", orden: 99 };
+const VACIO = {
+    nombre: "",
+    recorrido: "",
+    imagen: "",
+    parrafo1: "",
+    parrafo2: "",
+    orden: 99,
+};
 
 function Admin() {
     const [lugares, setLugares] = useState([]);
@@ -91,6 +98,12 @@ function Admin() {
                         value={form.nombre}
                         onChange={handleChange}
                         required
+                    />
+                    <input
+                        name="recorrido"
+                        placeholder="Ej: Marzo"
+                        value={form.recorrido}
+                        onChange={handleChange}
                     />
                     <input
                         name="imagen"

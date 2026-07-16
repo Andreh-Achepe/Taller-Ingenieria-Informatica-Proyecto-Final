@@ -11,6 +11,7 @@ module "dynamodb-table" {
     { name = "tramo", type = "S" },
     { name = "fecha", type = "S" },
     { name = "entity_type", type = "S" },
+    { name = "recorrido", type = "S" },
   ]
 
   server_side_encryption_enabled     = true
@@ -35,6 +36,11 @@ module "dynamodb-table" {
     {
       name            = "fecha-index"
       hash_key        = "fecha"
+      projection_type = "ALL"
+    },
+    {
+      name            = "recorrido-index"
+      hash_key        = "recorrido"
       projection_type = "ALL"
     }
   ]

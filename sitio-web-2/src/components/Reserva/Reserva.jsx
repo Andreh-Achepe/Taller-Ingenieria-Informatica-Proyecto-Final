@@ -66,12 +66,13 @@ function Reserva() {
 
                 <label htmlFor="tramo">Recorrido</label>
                 <select id="tramo" name="tramo">
-                    <option value="">Seleccione un recorrido</option>
-                    {lugares.map((l) => (
-                        <option key={l.id} value={l.nombre}>
-                            {l.nombre}
-                        </option>
-                    ))}
+                    {[...new Set(lugares.map((l) => l.recorrido).filter(Boolean))].map(
+                        (r) => (
+                            <option key={r} value={r}>
+                                {r}
+                            </option>
+                        ),
+                    )}
                 </select>
 
                 <label htmlFor="fecha">Fecha</label>

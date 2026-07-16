@@ -23,17 +23,18 @@ def list_all():
         FilterExpression="entity_type = :t",
         ExpressionAttributeValues={":t": "lugar"},
     )
-    items = sorted(result.get("Items", []), key=lambda i: i.get("orden", 99))
+    items = sorted(result.get("Items", []), key=lambda i: int(i.get("orden", 99)))
     return resp(
         200,
         [
             {
                 "id": i["id"],
                 "nombre": i["nombre"],
+                "recorrido": i.get("recorrido", ""),
                 "imagen": i["imagen"],
                 "parrafo1": i.get("parrafo1", ""),
                 "parrafo2": i.get("parrafo2", ""),
-                "orden": i.get("orden", 99),
+                "orden": int(i.get("orden", 99)),
             }
             for i in items
         ],
@@ -55,10 +56,11 @@ def create(body):
         "id": str(uuid.uuid4()),
         "entity_type": "lugar",
         "nombre": body["nombre"],
+        "recorrido": body.get("recorrido", ""),
         "imagen": body.get("imagen", ""),
         "parrafo1": body.get("parrafo1", ""),
         "parrafo2": body.get("parrafo2", ""),
-        "orden": body.get("orden", 99),
+        "orden": int(body.get("orden", 99)),
     }
     table.put_item(Item=item)
     return resp(201, item)
@@ -70,9 +72,9 @@ def update(lugar_id, body):
     if not item or item.get("entity_type") != "lugar":
         return resp(404, {"message": "No encontrado"})
     updates = {}
-    for field in ["nombre", "imagen", "parrafo1", "parrafo2", "orden"]:
+    for field in ["nombre", "recorrido", "imagen", "parrafo1", "parrafo2", "orden"]:
         if field in body:
-            updates[field] = body[field]
+            updates[field] = int(body[field]) if field == "orden" else body[field]
     if not updates:
         return resp(400, {"message": "Nada que actualizar"})
     update_expr = "SET " + ", ".join(f"#{k} = :{k}" for k in updates)
