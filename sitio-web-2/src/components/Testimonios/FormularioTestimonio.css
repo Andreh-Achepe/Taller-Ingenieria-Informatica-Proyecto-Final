@@ -1,0 +1,66 @@
+.formulario-testimonio {
+    max-width:700px;
+    margin:100px auto;
+    margin-top: 30px;
+    background:#1f1f1f;
+    color:white;
+    padding:50px;
+    padding-top: 30px;
+    border-radius:20px;
+    box-shadow:0 20px 40px rgba(0,0,0,.35);
+}
+
+.formulario-testimonio h3 {
+    text-align:center;
+    margin-bottom:15px;
+    font-size:2rem;
+}
+
+.formulario-testimonio p {
+    text-align:center;
+    color:#cfcfcf;
+    margin-bottom:35px;
+    line-height:1.6;
+}
+
+.formulario-testimonio form {
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.formulario-testimonio label {
+    color:white;
+    font-weight:600;
+}
+
+.formulario-testimonio input,
+.formulario-testimonio textarea {
+    padding:14px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    font-size:16px;
+    font-family:inherit;
+}
+
+.formulario-testimonio input:focus,
+.formulario-testimonio textarea:focus {
+    outline:none;
+    border-color:#2f80ed;
+}
+
+.formulario-testimonio textarea {
+    resize:vertical;
+    min-height:120px;
+}
+
+.formulario-testimonio .btn {
+    width:100%;
+    margin-top:25px;
+    padding:14px;
+    border:1px solid #333333;
+    border-radius:8px;
+    font-size:16px;
+    font-family:inherit;
+    cursor:pointer;
+}

@@ -1,0 +1,10 @@
+.intro{
+    max-width:900px;
+    margin:auto;
+    padding:100px 20px;
+    text-align:center;
+}
+
+.intro p{
+    margin-bottom:20px;
+}
