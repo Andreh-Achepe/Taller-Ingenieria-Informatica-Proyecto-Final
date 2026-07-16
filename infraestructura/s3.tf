@@ -4,7 +4,15 @@ module "s3-bucket" {
   # No puedo creer que exista la funcion lower la verdad
   bucket        = "${lower(var.project)}-bucket-${var.region}"
   force_destroy = true
-  tags          = var.tags
+
+  server_side_encryption_configuration = {
+    rule = {
+      apply_server_side_encryption_by_default = {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+  tags = var.tags
 }
 
 module "s3-bucket_notification" {

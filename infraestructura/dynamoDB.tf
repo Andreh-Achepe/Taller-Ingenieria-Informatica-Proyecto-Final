@@ -12,6 +12,9 @@ module "dynamodb-table" {
     { name = "fecha", type = "S" }
   ]
 
+  server_side_encryption_enabled     = true
+  server_side_encryption_kms_key_arn = null
+
   global_secondary_indexes = [
     {
       name            = "user-mail-index"

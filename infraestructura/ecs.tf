@@ -1,8 +1,8 @@
 resource "aws_ecr_repository" "web" {
   name                 = "${lower(var.project)}-web"
-  image_tag_mutability = "IMMUTABLE"
+  image_tag_mutability = "MUTABLE" # Se tuvo que cambiar para ir reemplazando la imagen
   tags                 = var.tags
-
+  force_delete         = true
   image_scanning_configuration {
     scan_on_push = true
   }

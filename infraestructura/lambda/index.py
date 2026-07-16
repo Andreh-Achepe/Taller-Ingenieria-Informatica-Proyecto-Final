@@ -14,7 +14,7 @@ def handler(event, context):
 
         table.put_item(
             Item={
-                "id": int(datetime.now().timestamp() * 1000),
+                "id": str(int(datetime.now().timestamp() * 1000)),
                 "s3_key": key,
                 "filename": key.split("/")[-1],
                 "created_at": datetime.now().isoformat(),
