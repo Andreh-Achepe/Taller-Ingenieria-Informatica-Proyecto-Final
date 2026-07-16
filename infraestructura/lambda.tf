@@ -82,6 +82,19 @@ module "lambda_booking" {
   tags = var.tags
 }
 
+
+resource "aws_lambda_permission" "booking_alb" {
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_booking.lambda_function_name
+  principal     = "elasticloadbalancing.amazonaws.com"
+}
+
+resource "aws_lb_target_group_attachment" "booking" {
+  depends_on       = [aws_lambda_permission.booking_alb]
+  target_group_arn = module.alb.target_groups["booking-lambda"].arn
+  target_id        = module.lambda_booking.lambda_function_arn
+}
+
 module "lambda_testimonios" {
   source  = "terraform-aws-modules/lambda/aws"
   version = "~> 8.8.0"
@@ -118,21 +131,11 @@ module "lambda_testimonios" {
 
   tags = var.tags
 }
-resource "aws_lambda_permission" "booking_alb" {
-  action        = "lambda:InvokeFunction"
-  function_name = module.lambda_booking.lambda_function_name
-  principal     = "elasticloadbalancing.amazonaws.com"
-}
 
 resource "aws_lambda_permission" "testimonios_alb" {
   action        = "lambda:InvokeFunction"
   function_name = module.lambda_testimonios.lambda_function_name
   principal     = "elasticloadbalancing.amazonaws.com"
-}
-resource "aws_lb_target_group_attachment" "booking" {
-  depends_on       = [aws_lambda_permission.booking_alb]
-  target_group_arn = module.alb.target_groups["booking-lambda"].arn
-  target_id        = module.lambda_booking.lambda_function_arn
 }
 
 resource "aws_lb_target_group_attachment" "testimonios" {
@@ -141,3 +144,50 @@ resource "aws_lb_target_group_attachment" "testimonios" {
   target_id        = module.lambda_testimonios.lambda_function_arn
 }
 
+module "lambda_lugares" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 8.8.0"
+
+  function_name = "${lower(var.project)}-lugares"
+  description   = "Gestiona lugares para mostrar recorridos"
+  handler       = "lugares.handler"
+  runtime       = var.lambda_runtime
+  source_path   = "${path.module}/lambda"
+
+  environment_variables = {
+    TABLE_NAME = module.dynamodb-table.dynamodb_table_id
+  }
+  # en la presentacion recalcamos que las policies se crean aca mismo
+  # mas que nada para no webiar tanto con el IAM y tener todo en su lugar
+  # Ademmas es mas legible, la desicion no es arquitecntonica, es de trabajo y lectura
+  attach_policy_statements = true
+  policy_statements = {
+    dynamodb_lugares = {
+      effect = "Allow"
+      actions = [
+        "dynamodb:PutItem",
+        "dynamodb:GetItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Scan"
+      ]
+      resources = [
+        module.dynamodb-table.dynamodb_table_arn,
+        "${module.dynamodb-table.dynamodb_table_arn}/index/*"
+      ]
+    }
+  }
+  tags = var.tags
+}
+
+resource "aws_lambda_permission" "lugares_alb" {
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_lugares.lambda_function_name
+  principal     = "elasticloadbalancing.amazonaws.com"
+}
+
+resource "aws_lb_target_group_attachment" "lugares" {
+  depends_on       = [aws_lambda_permission.lugares_alb]
+  target_group_arn = module.alb.target_groups["lugares-lambda"].arn
+  target_id        = module.lambda_lugares.lambda_function_arn
+}

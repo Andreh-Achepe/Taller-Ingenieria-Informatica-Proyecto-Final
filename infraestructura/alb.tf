@@ -43,6 +43,19 @@ module "alb" {
             }
           }]
         }
+        lugares = {
+          priority = 30
+          actions = [{
+            forward = {
+              target_group_key = "lugares-lambda"
+            }
+          }]
+          conditions = [{
+            path_pattern = {
+              values = ["/api/lugares*"]
+            }
+          }]
+        }
       }
     }
   }
@@ -64,6 +77,11 @@ module "alb" {
     }
     testimonios-lambda = {
       name_prefix       = "test"
+      target_type       = "lambda"
+      create_attachment = false
+    }
+    lugares-lambda = {
+      name_prefix       = "lugars" # Como que hay maximo de caracteres aca (max 6)
       target_type       = "lambda"
       create_attachment = false
     }
