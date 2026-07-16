@@ -1,21 +1,27 @@
-import Hero from "./components/Hero/Hero.jsx";
-import Intro from "./components/Intro/Intro.jsx";
-import Lugares from "./components/Lugares/Lugares.jsx";
-import Mapa from "./components/Mapa/Mapa.jsx";
-import Testimonios from "./components/Testimonios/Testimonios.jsx";
-import Reserva from "./components/Reserva/Reserva.jsx";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Admin from "./pages/Admin";
 
 function App() {
 
     return (
-        <>
-            <Hero />
-            <Intro/>
-            <Lugares/>
-            <Mapa/>
-            <Testimonios/>
-            <Reserva/>
-        </>
+
+        <BrowserRouter>
+
+            <Routes>
+
+                <Route path="/" element={<Home />} />
+
+                <Route path="/login" element={<Login />} />
+
+                <Route path="/admin" element={<Admin />} />
+
+            </Routes>
+
+        </BrowserRouter>
+
     );
 
 }

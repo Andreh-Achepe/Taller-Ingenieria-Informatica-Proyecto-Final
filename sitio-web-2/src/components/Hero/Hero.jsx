@@ -1,5 +1,7 @@
 import "./Hero.css";
 
+import { Link } from "react-router-dom";
+
 function Hero() {
 
     return (
@@ -14,6 +16,10 @@ function Hero() {
                     Porque ya todos conocen Angelmó.
                     Nosotros te mostramos las cosas raras.
                 </p>
+
+                <Link className="btn" to="/login">
+                    Administrador
+                </Link>
 
                 <a href="#lugarestitulo" className="btn">
                     Ver recorrido
