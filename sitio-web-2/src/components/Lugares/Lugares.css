@@ -1,5 +1,29 @@
-.lugares{
-    width:90%;
-    max-width:1200px;
-    margin:auto;
+.lugares {
+    width: 90%;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.recorrido-filtro {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.recorrido-filtro {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.recorrido-filtro select {
+    padding: 10px 20px;
+    border: 2px solid #3b8d31;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    background: white;
+    cursor: pointer;
 }

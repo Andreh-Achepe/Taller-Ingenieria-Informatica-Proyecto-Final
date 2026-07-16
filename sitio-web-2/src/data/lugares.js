@@ -2,6 +2,7 @@ const lugares = [
     {
         id: 1,
         nombre: "Terminal de buses",
+        recorrido: "Clásico",
         imagen: "/img/terminal.jpg",
         parrafo1:
             "Donde comienza la magia (y el olor a orina también). Punto de partida ideal para quienes llegan desde otras ciudades y quieren comenzar el recorrido apenas bajan del bus.",
@@ -12,6 +13,7 @@ const lugares = [
     {
         id: 2,
         nombre: "Campanario San Javier",
+        recorrido: "Clásico",
         imagen: "/img/campanario.jpg",
         parrafo1:
             "Una de las primeras paradas del recorrido. Su entorno conserva gran parte de su vegetación original y ofrece una muestra de cómo era esta zona antes del crecimiento urbano de la ciudad.",
@@ -22,6 +24,7 @@ const lugares = [
     {
         id: 3,
         nombre: "Restaurante El Cheff II",
+        recorrido: "Clásico",
         imagen: "/img/chef.jpg",
         parrafo1:
             "Si algún día se crea la cuarta estrella Michelin, será porque evaluaron al Cheff.",
@@ -32,6 +35,7 @@ const lugares = [
     {
         id: 4,
         nombre: "Ex cárcel",
+        recorrido: "Clásico",
         imagen: "/img/excarcel.jpg",
         parrafo1:
             "Gente con cara de pocos amigos se hospedó aquí por años, si los mejores hostales sólo pueden retener a sus huéspedes por unos días, imagínate lo bueno que era este lugar.",
@@ -42,6 +46,7 @@ const lugares = [
     {
         id: 5,
         nombre: "Piedra Perrito",
+        recorrido: "Clásico",
         imagen: "/img/piedra-perrito.jpg",
         parrafo1:
             "Esta piedra fue pintada en honor a Copito, un querido fox terrier que durante años acompañó a vecinos y trabajadores del sector portuario, ganándose el cariño de quienes lo conocieron.",
@@ -52,6 +57,7 @@ const lugares = [
     {
         id: 6,
         nombre: "Sodimac Abandonado",
+        recorrido: "Extremo",
         imagen: "/img/sodimac.jpg",
         parrafo1:
             "Si tu hijo es dependiente de sustancias, seguramente lo encontrarás aquí.",
@@ -62,6 +68,7 @@ const lugares = [
     {
         id: 7,
         nombre: "Completos Charles",
+        recorrido: "Extremo",
         imagen: "/img/completos-charles.jpg",
         parrafo1:
             "Un antiguo bus transformado en local de completos. Tal cual, y temático, más latinoamericano no puede ser.",
@@ -72,6 +79,7 @@ const lugares = [
     {
         id: 8,
         nombre: "La Silla del Presidente",
+        recorrido: "Extremo",
         imagen: "/img/silla-presidente.jpg",
         parrafo1:
             "Un gigantesco tocón de alerce de entre 2000 y 5000 años de edad oculto a plena vista e ignorado por muchos.",
@@ -82,6 +90,7 @@ const lugares = [
     {
         id: 9,
         nombre: "Casa Embrujada de Alerce",
+        recorrido: "Extremo",
         imagen: "/img/embrujao.jpg",
         parrafo1:
             "Toda ciudad tiene una casa de la que se cuentan historias. Esta es la nuestra.",
@@ -92,6 +101,7 @@ const lugares = [
     {
         id: 10,
         nombre: "Huellas",
+        recorrido: "Extremo",
         imagen: "/img/huellas.png",
         parrafo1:
             "Para finalizar, otra muestra de lo que parece ser una de las actividades favoritas del puertomontino: ignorar olímpicamente lugares de alto valor arqueológico.",
