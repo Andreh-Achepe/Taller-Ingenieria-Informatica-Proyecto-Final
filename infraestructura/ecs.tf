@@ -1,16 +1,20 @@
-resource "aws_ecr_repository" "web" {
-  name                 = "${lower(var.project)}-web"
-  image_tag_mutability = "MUTABLE" # Se tuvo que cambiar para ir reemplazando la imagen
-  tags                 = var.tags
-  force_delete         = true
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-  encryption_configuration {
-    encryption_type = "KMS"
-  }
-}
+# resource "aws_ecr_repository" "web" {
+#   name                 = "${lower(var.project)}-web"
+#   image_tag_mutability = "MUTABLE" # Se tuvo que cambiar para ir reemplazando la imagen
+#   tags                 = var.tags
+#   force_delete         = true
+#   image_scanning_configuration {
+#     scan_on_push = true
+#   }
+#   encryption_configuration {
+#     encryption_type = "KMS"
+#   }
+# }
+#
+data "aws_ecr_repository" "web" {
+  name = "${lower(var.project)}-web"
 
+}
 module "ecs" {
   source  = "terraform-aws-modules/ecs/aws"
   version = "~> 7.5.0"
@@ -28,11 +32,11 @@ module "ecs" {
       # Impedimos errores al poner esta cuestion, basicamente le decimos que pondremos el rol fabricado por nosotros
       create_tasks_iam_role  = false
       task_exec_iam_role_arn = module.iam_role.arn
-
+      enable_autoscaling     = false
       container_definitions = {
         web = {
           name  = "${var.project}-contenedor-cluster"
-          image = "${aws_ecr_repository.web.repository_url}:${var.ecr_image_tag}"
+          image = "${data.aws_ecr_repository.web.repository_url}:${var.ecr_image_tag}"
           portMappings = [{
             containerPort = var.container_port
           }]
@@ -58,7 +62,7 @@ module "ecs" {
           container_port   = var.container_port
         }
       }
-      wait_for_steady_state = true
+      wait_for_steady_state = false
     }
   }
   tags = var.tags
