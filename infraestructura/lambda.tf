@@ -109,7 +109,7 @@ module "lambda_testimonios" {
   authorization_type         = "NONE"
   cors = {
     allow_origins = ["*"]
-    allow_methods = ["GET", "POST"]
+    allow_methods = ["GET", "POST", "PUT", "DELETE"]
     allow_headers = ["Content-Type"]
   }
 
@@ -121,7 +121,7 @@ module "lambda_testimonios" {
   policy_statements = {
     s3 = {
       effect  = "Allow"
-      actions = ["s3:PutObject", "s3:GetObject", "s3:ListBucket"]
+      actions = ["s3:PutObject", "s3:GetObject", "s3:ListBucket", "s3:DeleteObject"]
       resources = [
         module.s3-bucket.s3_bucket_arn,
         "${module.s3-bucket.s3_bucket_arn}/*"
