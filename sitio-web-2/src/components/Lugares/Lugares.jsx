@@ -24,7 +24,7 @@ function Lugares() {
       : lugares.filter((l) => l.recorrido === recorrido);
 
   return (
-    <section className="lugares">
+    <section id="lugarestitulo" className="lugares">
       <h2 className="section-title">Lugares de interest</h2>
 
       {recorridos.length > 0 && (

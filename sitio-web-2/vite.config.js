@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       "/api": {
         target:
-          "http://ULAGOS-TIN-LAB3-ALB-81384851.us-east-1.elb.amazonaws.com",
+          "http://ulagos-tin-lab3-alb-2074507711.us-east-1.elb.amazonaws.com",
         changeOrigin: true,
       },
     },

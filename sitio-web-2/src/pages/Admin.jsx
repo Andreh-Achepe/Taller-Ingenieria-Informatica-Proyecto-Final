@@ -12,6 +12,9 @@ const VACIO = {
 
 function Admin() {
   const [tab, setTab] = useState("recorridos");
+  const [authenticated, setAuthenticated] = useState(false);
+  const [passInput, setPassInput] = useState("");
+  const [passError, setPassError] = useState("");
 
   {
     /*======================================= */
@@ -158,8 +161,38 @@ function Admin() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "rejected" }),
-    }).then(() => cargarTestimonios());
+      }).then(() => cargarTestimonios());
   }
+
+  if (!authenticated) {
+    return (
+      <section style={{ maxWidth: 400, margin: "2rem auto", padding: "1rem", textAlign: "center" }}>
+        <h1>Acceso restringido</h1>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          if (passInput === "admin123") {
+            setAuthenticated(true);
+            setPassError("");
+          } else {
+            setPassError("Contraseña incorrecta");
+          }
+        }}>
+          <input
+            type="password"
+            value={passInput}
+            onChange={(e) => setPassInput(e.target.value)}
+            placeholder="Contraseña"
+            required
+            autoFocus
+            style={{ padding: "8px", fontSize: "1rem", width: "200px" }}
+          />
+          <button type="submit" className="btn" style={{ marginTop: "0.5rem", marginLeft: "0.5rem" }}>Ingresar</button>
+        </form>
+        {passError && <p style={{ color: "red", marginTop: "0.5rem" }}>{passError}</p>}
+      </section>
+    );
+  }
+
 
   return (
     <section style={{ maxWidth: 900, margin: "2rem auto", padding: "1rem" }}>
