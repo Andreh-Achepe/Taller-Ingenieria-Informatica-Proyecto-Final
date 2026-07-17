@@ -2,9 +2,22 @@ import json
 import boto3
 import os
 import uuid
+import base64
 
 dynamoDB = boto3.resource("dynamodb")
 table = dynamoDB.Table(os.environ["TABLE_NAME"])
+s3 = boto3.client("s3")
+bucket = os.environ["BUCKET_NAME"]
+
+
+def img_url(path):
+    if path and path.startswith("lugares/"):
+        return s3.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket, "Key": path},
+            ExpiresIn=3600,
+        )
+    return path
 
 
 def resp(code, body):
@@ -31,7 +44,7 @@ def list_all():
                 "id": i["id"],
                 "nombre": i["nombre"],
                 "recorrido": i.get("recorrido", ""),
-                "imagen": i["imagen"],
+                "imagen": img_url(i.get("imagen", "")),
                 "parrafo1": i.get("parrafo1", ""),
                 "parrafo2": i.get("parrafo2", ""),
                 "orden": int(i.get("orden", 99)),
@@ -46,18 +59,31 @@ def get_one(lugar_id):
     item = result.get("Item")
     if not item or item.get("entity_type") != "lugar":
         return resp(404, {"message": "No encontrado"})
+    item["imagen"] = img_url(item.get("imagen", ""))
     return resp(200, item)
 
 
 def create(body):
     if "nombre" not in body:
         return resp(400, {"message": "Falta nombre"})
+    imagen_final = body.get("imagen", "")
+    if body.get("imagen_base64"):
+        ext = "jpg"
+        img_key = f"lugares/{str(uuid.uuid4())}.{ext}"
+        s3.put_object(
+            Bucket=bucket,
+            Key=img_key,
+            Body=base64.b64decode(body["imagen_base64"]),
+            ContentType=f"image/{ext}",
+        )
+        imagen_final = img_key
+
     item = {
         "id": str(uuid.uuid4()),
         "entity_type": "lugar",
         "nombre": body["nombre"],
         "recorrido": body.get("recorrido", ""),
-        "imagen": body.get("imagen", ""),
+        "imagen": imagen_final,
         "parrafo1": body.get("parrafo1", ""),
         "parrafo2": body.get("parrafo2", ""),
         "orden": int(body.get("orden", 99)),
@@ -72,7 +98,17 @@ def update(lugar_id, body):
     if not item or item.get("entity_type") != "lugar":
         return resp(404, {"message": "No encontrado"})
     updates = {}
-    for field in ["nombre", "recorrido", "imagen", "parrafo1", "parrafo2", "orden"]:
+    if body.get("imagen_base64"):
+        ext = "jpg"
+        img_key = f"lugares/{str(uuid.uuid4())}.{ext}"
+        s3.put_object(
+            Bucket=bucket,
+            Key=img_key,
+            Body=base64.b64decode(body["imagen_base64"]),
+            ContentType=f"image/{ext}",
+        )
+        updates["imagen"] = img_key
+    for field in ["nombre", "recorrido", "parrafo1", "parrafo2", "orden"]:
         if field in body:
             updates[field] = int(body[field]) if field == "orden" else body[field]
     if not updates:
@@ -102,7 +138,6 @@ def delete(lugar_id):
 def handler(event, context):
     method = event.get("httpMethod", "GET")
     path = event.get("path", "/api/lugares")
-
     try:
         if method == "GET" and path == "/api/lugares":
             return list_all()

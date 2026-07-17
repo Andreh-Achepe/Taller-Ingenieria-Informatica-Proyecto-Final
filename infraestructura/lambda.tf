@@ -155,7 +155,8 @@ module "lambda_lugares" {
   source_path   = "${path.module}/lambda"
 
   environment_variables = {
-    TABLE_NAME = module.dynamodb-table.dynamodb_table_id
+    TABLE_NAME  = module.dynamodb-table.dynamodb_table_id
+    BUCKET_NAME = module.s3-bucket.s3_bucket_id
   }
   # en la presentacion recalcamos que las policies se crean aca mismo
   # mas que nada para no webiar tanto con el IAM y tener todo en su lugar
@@ -175,6 +176,11 @@ module "lambda_lugares" {
         module.dynamodb-table.dynamodb_table_arn,
         "${module.dynamodb-table.dynamodb_table_arn}/index/*"
       ]
+    },
+    s3 = {
+      effect    = "Allow"
+      actions   = ["s3:PutObject", "s3:GetObject"]
+      resources = ["${module.s3-bucket.s3_bucket_arn}/*"]
     }
   }
   tags = var.tags
