@@ -29,7 +29,7 @@ La solución se encuentra completamente desplegada en AWS usando Infraestructura
 
 ### Proveedor y versión de Terraform
 
-Se utiliza Terraform con un backend remoto en Amazon S3 para almacenar el estado de la infraestructura (terraform.tfstate) de forma centralizada, segura y accesible para todos los integrantes del equipo. Esto permite trabajar colaborativamente evitando que cada desarrollador mantenga una copia local del estado. Además, el proveedor de AWS se fija en la versión ~> 6.52.0 para garantizar compatibilidad y estabilidad durante los despliegues.
+Se utiliza Terraform con un backend remoto en Amazon `S3` para almacenar el estado de la infraestructura (`terraform.tfstate`) de forma centralizada, segura y accesible para todos los integrantes del equipo. Esto permite trabajar colaborativamente evitando que cada desarrollador mantenga una copia local del estado. Además, el proveedor de AWS se fija en la versión `~> 6.52.0` para garantizar compatibilidad y estabilidad durante los despliegues.
 
 ```hcl
 terraform {
@@ -47,11 +47,11 @@ terraform {
 }
 ```
 
-- **Decisión**: Se selecciona Amazon S3 como backend remoto debido a que entrega una solución simple y eficiente para compartir el estado de Terraform entre los integrantes del equipo, sin requerir componentes adicionales de infraestructura. Además, permite mantener el estado protegido mediante cifrado y gestionar bloqueos durante las operaciones de Terraform mediante use_lockfile = true, evitando ejecuciones simultáneas que puedan generar conflictos. Debido a que Terraform desde la versión 1.10 incorporó este mecanismo nativo de bloqueo, ya no es necesario utilizar DynamoDB como servicio adicional para el manejo del lock.
+- **Decisión**: Se selecciona Amazon `S3` como backend remoto debido a que entrega una solución simple y eficiente para compartir el estado de Terraform entre los integrantes del equipo, sin requerir componentes adicionales de infraestructura. Además, permite mantener el estado protegido mediante cifrado y gestionar bloqueos durante las operaciones de Terraform mediante `use_lockfile = true`, evitando ejecuciones simultáneas que puedan generar conflictos. Debido a que Terraform desde la versión 1.10 incorporó este mecanismo nativo de bloqueo, ya no es necesario utilizar `DynamoDB` como servicio adicional para el manejo del lock.
 
 ### VPC y Subnets
 
-La red se implementa utilizando el módulo oficial terraform-aws-modules/vpc/aws ~> 6.6.1, el cual permite crear una VPC siguiendo buenas prácticas de configuración de red en AWS. Se utiliza el bloque CIDR privado 10.0.0.0/16, reservado para redes internas, evitando conflictos con rangos públicos o redes externas.
+La red se implementa utilizando el módulo oficial `terraform-aws-modules/vpc/aws ~> 6.6.1`, el cual permite crear una VPC siguiendo buenas prácticas de configuración de red en AWS. Se utiliza el bloque CIDR privado `10.0.0.0/16`, reservado para redes internas, evitando conflictos con rangos públicos o redes externas.
 
 ```hcl
 module "net_connections" {
@@ -70,16 +70,16 @@ module "net_connections" {
 ```
 
 - **CIDR `/16`**: permite disponer de un amplio rango de direcciones IP privadas (más de 65.000), entregando capacidad suficiente para agregar nuevos servicios y recursos en futuras expansiones.
-- **Múltiples zonas de disponibilidad (AZs)**: la infraestructura se distribuye entre us-east-1a y us-east-1b, permitiendo implementar los servicios en más de una zona y mejorar la tolerancia ante fallos de una zona específica.
+- **Múltiples zonas de disponibilidad (AZs)**: la infraestructura se distribuye entre `us-east-1a` y `us-east-1b`, permitiendo implementar los servicios en más de una zona y mejorar la tolerancia ante fallos de una zona específica.
 - **Subnets públicas y privadas**: se crean dos subnets públicas y dos privadas para separar componentes expuestos a internet de aquellos que deben permanecer aislados. Las subnets públicas alojan el Application Load Balancer (ALB), mientras que las subnets privadas contienen las tareas ECS Fargate, evitando exposición directa hacia internet.
 - **NAT Gateway único**: se configura un único NAT Gateway para permitir que los recursos en subnets privadas puedan realizar conexiones salientes hacia internet, necesarias para descargar imágenes desde ECR y enviar información a servicios como CloudWatch. Se opta por una única instancia debido a que reduce costos operacionales frente a implementar un NAT Gateway por cada zona de disponibilidad, aceptando una menor redundancia.
-- **Soporte DNS habilitado**: las opciones enable_dns_hostnames y enable_dns_support permiten la resolución de nombres DNS dentro de la VPC, facilitando la comunicación entre servicios de AWS.
+- **Soporte DNS habilitado**: las opciones `enable_dns_hostnames` y `enable_dns_support` permiten la resolución de nombres DNS dentro de la VPC, facilitando la comunicación entre servicios de AWS.
 
 ### Security Groups
 
-Se definen dos Security Groups con minimo privilegio:
+Se definen dos Security Groups aplicando el principio de mínimo privilegio:
 
-**ALB (publico)**:
+**ALB (público)**:
 
 ```hcl
 module "security_group_alb" {
@@ -109,11 +109,15 @@ module "security_group_priv" {
 }
 ```
 
-- **Decision**: el SG privado solo acepta trafico desde el SG del ALB (no por IP, sino por referencia al SG). Esto significa que aunque alguien conozca la IP interna de las tareas ECS, no puede acceder directamente a menos que venga a traves del ALB. El egress esta abierto para permitir que los contenedores descarguen dependencias, envien logs, y conecten con ECR/DynamoDB/S3 mediante los VPC endpoints implicitos de AWS.
+- **Decisión**: se separan los permisos de red entre el ALB y las tareas ECS para mantener una arquitectura con control de acceso por capas. El Security Group del ALB permite tráfico HTTP desde internet mediante el puerto 80, mientras que el puerto 443 queda habilitado como preparación para incorporar HTTPS mediante certificados TLS en futuras mejoras.
+
+El Security Group privado de ECS restringe las conexiones entrantes permitiendo únicamente tráfico proveniente del Security Group del ALB, en lugar de permitir accesos mediante rangos de IP. Esto evita que las tareas puedan ser alcanzadas directamente desde internet o desde otros recursos no autorizados, obligando a que toda comunicación externa pase primero por el balanceador.
+
+El tráfico de salida (`egress`) se mantiene habilitado para permitir que los contenedores realicen conexiones necesarias para su funcionamiento, como descarga de imágenes desde ECR, envío de logs hacia CloudWatch y comunicación con otros servicios administrados de AWS.
 
 ### Application Load Balancer
 
-El ALB es el unico punto de entrada publico. Se configura con el modulo `terraform-aws-modules/alb/aws ~> 10.5.0`:
+El ALB funciona como el único punto de entrada público de la aplicación, conectándose a la VPC mediante las subnets públicas. Se configura utilizando el módulo `terraform-aws-modules/alb/aws ~> 10.5.0`:
 
 ```hcl
 module "alb" {
@@ -124,28 +128,55 @@ module "alb" {
     ex-http = {
       port     = 80
       protocol = "HTTP"
-      forward  = { target_group_key = "web-fargate" }
+
+      forward = {
+        target_group_key = "web-fargate"
+      }
+
       rules = {
-        booking      = { priority = 10, conditions = [{ path_pattern = { values = ["/api/booking"] } }], ... }
-        testimonios  = { priority = 20, conditions = [{ path_pattern = { values = ["/api/testimonios*"] } }], ... }
-        lugares      = { priority = 30, conditions = [{ path_pattern = { values = ["/api/lugares*"] } }], ... }
+        booking = {
+          priority = 10
+          conditions = [{
+            path_pattern = {
+              values = ["/api/booking"]
+            }
+          }]
+        }
+
+        testimonios = {
+          priority = 20
+          conditions = [{
+            path_pattern = {
+              values = ["/api/testimonios*"]
+            }
+          }]
+        }
+
+        lugares = {
+          priority = 30
+          conditions = [{
+            path_pattern = {
+              values = ["/api/lugares*"]
+            }
+          }]
+        }
       }
     }
   }
 }
 ```
 
-- **4 Target Groups**: `web-fargate` (tipo IP, para ECS), `booking-lambda`, `testimonios-lambda`, `lugares-lambda` (tipo Lambda).
-- **Path-based routing**: el ALB inspecciona la URL y redirige:
+- **4 Target Groups**: web-fargate (tipo IP, utilizado para dirigir tráfico hacia las tareas ECS Fargate), booking-lambda, testimonios-lambda y lugares-lambda (tipo Lambda, utilizados para ejecutar las funciones correspondientes).
+- **Path-based routing**: el ALB inspecciona la ruta solicitada por el usuario y redirige la petición al servicio correspondiente:
   - `/api/booking` → Lambda de reservas
   - `/api/testimonios*` → Lambda de testimonios
   - `/api/lugares*` → Lambda de lugares
-  - `/*` (default) → ECS Fargate (React SPA)
-- **Decision**: se eligio ALB sobre API Gateway porque necesitabamos un unico DNS que sirviera tanto el SPA estatico como las APIs. El ruteo por path del ALB permite tener todo bajo un mismo dominio, simplificando CORS (todas las llamadas desde el frontend son al mismo origen `/api/*`). Ademas, el ALB tiene menor latencia que API Gateway para trafico HTTP simple y su costo es predecible ($0.0225/hora + $0.008/LCU).
+  - `/*` (ruta por defecto) → ECS Fargate, donde se encuentra la aplicación React.
+- **Decisión**: se utiliza un Application Load Balancer como punto central de entrada para la aplicación, permitiendo manejar tanto el acceso al frontend como las solicitudes del backend mediante un único componente. Las reglas del listener permiten realizar enrutamiento basado en rutas, funcionando como una capa de distribución similar a un API Gateway, donde las peticiones hacia `/api/*` son dirigidas automáticamente hacia las funciones Lambda correspondientes.
 
 ### ECS Fargate (Frontend)
 
-El frontend es una aplicacion React construida con Vite y servida por Nginx. El despliegue usa ECS Fargate con el modulo `terraform-aws-modules/ecs/aws ~> 7.5.0`:
+El frontend corresponde a una aplicación React construida con Vite y desplegada como un contenedor Docker dentro de Amazon ECS utilizando el modo de ejecución Fargate. El despliegue utiliza el módulo `terraform-aws-modules/ecs/aws ~> 7.5.0`:
 
 ```hcl
 module "ecs" {
@@ -169,32 +200,18 @@ module "ecs" {
 }
 ```
 
-**Dockerfile multi-stage**:
-
-```dockerfile
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM nginx:1.27-alpine
-ARG ALB_URL
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-RUN sed -i "s/__ALB_URL__/${ALB_URL}/g" /etc/nginx/conf.d/default.conf
-```
-
-- **Decision Fargate vs EC2**: Fargate elimina la gestion de servidores (no hay que parchear SO, instalar Docker, ni administrar capacity). Para un equipo pequeno y un sitio de trafico bajo, el sobrecosto de Fargate (~$8.8/tarea/mes) se justifica frente al costo operativo de mantener instancias EC2.
-- **256 CPU / 512 MB**: combinacion minima valida de Fargate. El sitio es estatico (Nginx sirviendo HTML/JS/CSS), por lo que no requiere mas recursos.
-- **2 tareas en 2 AZs**: garantiza que si una tarea o AZ falla, el ALB dirige trafico a la tarea sana. El `desired_count = 2` asegura disponibilidad sin disparar costos.
-- **`assign_public_ip = false`**: las tareas corren en subnets privadas sin IP publica, accesibles solo a traves del ALB.
-- **Nginx `__ALB_URL__`**: el placeholder se reemplaza en tiempo de build con el DNS real del ALB (obtenido via `terraform output -raw alb_dns`). Esto permite que el contenedor sepa a donde enviar las peticiones `/api/*` una vez dentro de la VPC.
+- **Decisión Fargate vs EC2**: se utiliza Fargate debido a que elimina la necesidad de administrar servidores directamente, evitando tareas como mantenimiento del sistema operativo, instalación de Docker y gestión de capacidad. Para una aplicación con bajo tráfico esperado y un equipo reducido, esta alternativa simplifica la operación y mantenimiento de la infraestructura.
+- **256 CPU / 512 MB**: se utiliza una configuración de `0.25 vCPU` y `512 MB` de memoria, correspondiente al mínimo requerido para ejecutar una tarea Fargate. Debido a que el frontend únicamente sirve contenido estático de React, esta cantidad de recursos es suficiente para la carga esperada.
+- **2 tareas en ejecución (`desired_count = 2`)**: permite mantener dos instancias del frontend distribuidas dentro de la infraestructura disponible. En caso de que una tarea falle, el Application Load Balancer puede redirigir las solicitudes hacia la tarea restante, mejorando la disponibilidad del servicio.
+- **`launch_type = "FARGATE"`**: permite ejecutar los contenedores mediante una modalidad serverless, donde AWS administra la infraestructura necesaria para ejecutar las tareas sin que el equipo deba gestionar máquinas EC2.
+- **Subnets privadas**: las tareas ECS se despliegan dentro de las subnets privadas de la VPC para evitar exposición directa hacia internet. El acceso externo se realiza únicamente mediante el Application Load Balancer, ubicado en las subnets públicas, manteniendo los contenedores aislados y accesibles solo mediante la red interna de AWS.
+- **`assign_public_ip = false`**: evita que las tareas ECS reciban direcciones IP públicas, reforzando la seguridad al impedir conexiones directas desde internet hacia los contenedores.
+- **Imagen del contenedor**: la imagen Docker se obtiene dinámicamente desde Amazon ECR mediante el repositorio configurado en Terraform. La etiqueta (`tag`) se obtiene desde las variables definidas en `tfvars`, permitiendo seleccionar la versión específica de la aplicación que será desplegada.
+- **`portMappings`**: define el puerto mediante el cual ECS comunica el contenedor con el balanceador de carga. Se utiliza el puerto `80` debido a que es el puerto donde el servidor web del contenedor expone la aplicación frontend.
 
 ### Lambda (Backend serverless)
 
-Se implementan 4 funciones Lambda en Python 3.12 usando el modulo `terraform-aws-modules/lambda/aws ~> 8.8.0`. Cada funcion tiene politicas IAM acotadas a los recursos minimos que necesita.
+Se implementan `3` funciones Lambda en `Python 3.12` utilizando el módulo `terraform-aws-modules/lambda/aws ~> 8.8.0`. Cada función cuenta con permisos `IAM` acotados, siguiendo el principio de mínimo privilegio y permitiendo únicamente el acceso a los recursos necesarios para su funcionamiento.
 
 **Lambda de lugares** (`/api/lugares*`):
 
@@ -212,26 +229,24 @@ def handler(event, context):
         return delete(lugar_id)
 ```
 
-- CRUD completo almacenando registros en DynamoDB e imagenes en S3.
-- Las imagenes se reciben en base64 desde el panel admin y se decodifican antes de subirlas a S3.
-- Al consultar (GET), la Lambda genera URLs prefirmadas de S3 con 1 hora de expiracion, evitando hacer el bucket publico.
-- Se usa `Scan` con `FilterExpression` por `entity_type = "lugar"` para listar solo lugares, ya que la tabla es compartida.
+- Implementa operaciones CRUD sobre los lugares turísticos.
+- Los registros se almacenan en `DynamoDB`, mientras que las imágenes asociadas se almacenan en `S3`.
+- Al consultar lugares mediante GET, la Lambda genera URLs prefirmadas de `S3` con una expiración de 1 hora, evitando que el bucket de imágenes deba ser público.
+- Se usa `Scan` con `FilterExpression` por `entity_type = "lugar"` para obtener únicamente los registros correspondientes a lugares dentro de la tabla compartida.
 
 **Lambda de testimonios** (`/api/testimonios*`):
 
-- Almacena metadatos como JSON en `testimonios-meta/{uuid}.json` y las fotos en `testimonios/{uuid}.jpg` dentro del bucket S3.
-- GET publico retorna solo testimonios con `status = "approved"`, ordenados por fecha.
-- GET admin retorna todos los testimonios sin filtrar para moderacion.
-- POST crea testimonio con `status = "pending"`.
-- PUT permite aprobar (`status = "approved"`) o rechazar (`status = "rejected"`).
-- DELETE elimina tanto la imagen como los metadatos de S3.
-
-**Decision S3 vs DynamoDB para testimonios**: las fotos son binarias y pueden ser grandes (multiples MB en base64). Almacenar metadata + fotos juntos en S3 mantiene los datos autocontenidos y evita el limite de 400KB por item de DynamoDB. Ademas, listar objetos en S3 es eficiente para pocos items (carga baja esperada).
+- Almacena los metadatos de los testimonios como archivos `JSON` en `testimonios-meta/{uuid}.json` y las imágenes asociadas en `testimonios/{uuid}.jpg` dentro del bucket `S3`.
+- El endpoint `GET` público retorna únicamente testimonios con estado `approved`, ordenados por fecha.
+- El endpoint `GET` administrativo permite consultar todos los testimonios para procesos de moderación.
+- El método `POST` crea nuevos testimonios con estado inicial `pending`.
+- El método `PUT` permite modificar el estado del testimonio, aprobándolo (`approved`) o rechazándolo (`rejected`).
+- El método `DELETE` elimina tanto la imagen asociada como los metadatos almacenados en `S3`.
 
 **Lambda de reservas** (`/api/booking`):
 
 ```python
-# Guarda en DynamoDB y envia email via SES
+# Guarda en DynamoDB y envía email via SES
 item = {
     "id": str(uuid.uuid4()),
     "nombre": body["nombre"],
@@ -248,18 +263,19 @@ ses.send_email(
 )
 ```
 
-- Recibe POST con `nombre`, `email`, `tramo`, `fecha`. Almacena en DynamoDB y envia confirmacion por email via SES.
-- Tiene una Function URL publica como respaldo (sin autenticacion, CORS abierto).
+- Recibe `POST` con `nombre`, `email`, `tramo`, `fecha`. Almacena en `DynamoDB` y envía confirmacion por email via SES.
+- Tiene una `Function URL` pública como respaldo (sin autenticación, `CORS` abierto).
 
-**Lambda de catalogo S3** (trigger: `s3:ObjectCreated:*`):
+**Lambda de catálogo S3** (trigger: `s3:ObjectCreated:*`):
 
-- Se ejecuta automaticamente cuando se sube un archivo al bucket S3.
-- Lee los metadatos del objeto y escribe una entrada en DynamoDB con `id`, `s3_key`, `filename`, y `created_at`.
-- Sirve como respaldo de catalogacion para debugging o auditoria.
+- Recibe solicitudes de reserva mediante los datos `nombre`, `email`, `tramo` y `fecha`.
+- Guarda la información de la reserva en `DynamoDB`.
+- Envía un correo de confirmación al usuario mediante Amazon SES.
+- Posee una `Function URL` pública como respaldo, configurada sin autenticación y con `CORS` abierto.
 
 ### DynamoDB
 
-Se usa una unica tabla compartida para todas las entidades, diferenciadas por el atributo `entity_type`:
+Se usa una única tabla compartida para todas las entidades, diferenciadas por el atributo `entity_type`:
 
 ```hcl
 module "dynamodb-table" {
@@ -284,13 +300,13 @@ module "dynamodb-table" {
 }
 ```
 
-- **Decision single-table vs multi-table**: una sola tabla con `entity_type` como discriminador simplifica la gestion (un solo recurso Terraform, un solo ARN en las politicas IAM) y reduce costos. Los GSI permiten consultar por dimensiones especificas (ej. filtrar lugares por `recorrido`, buscar reservas por `user-mail`).
-- **Cifrado**: habilitado con KMS administrado por AWS sin costo adicional.
-- **On-demand**: no se configura capacidad provisionada, ideal para carga baja y esporadica (trafico de un sitio universitario).
+- **Decisión `single-table` vs `multi-table`**: una sola tabla con `entity_type` como discriminador simplifica la gestión (un solo recurso `Terraform`, un solo `ARN` en las políticas `IAM`) y reduce costos. Los `GSI` permiten consultar por dimensiones específicas (ej. filtrar lugares por `recorrido`, buscar reservas por `user-mail`).
+- **Cifrado**: habilitado con `KMS` administrado por AWS sin costo adicional.
+- **On-demand**: no se configura capacidad provisionada, ideal para carga baja y esporádica (tráfico de un sitio universitario).
 
 ### S3
 
-Bucket unico `ulagos-tin-lab3-bucket-us-east-1` para todas las imagenes y metadatos:
+Bucket único `ulagos-tin-lab3-bucket-us-east-1` para todas las imágenes y metadatos:
 
 ```hcl
 module "s3-bucket" {
@@ -300,8 +316,8 @@ module "s3-bucket" {
 }
 ```
 
-- **Cifrado SSE-S3 (AES256)** activado por defecto.
-- **URLs prefirmadas**: en vez de hacer el bucket publico, las Lambdas generan URLs temporales de 1 hora con `generate_presigned_url()`. Esto mantiene los datos privados pero accesibles desde el frontend.
+- **Cifrado `SSE-S3` (`AES256`)** activado por defecto.
+- **URLs prefirmadas**: en vez de hacer el bucket público, las Lambdas generan URLs temporales de 1 hora con `generate_presigned_url()`. Esto mantiene los datos privados pero accesibles desde el frontend.
 - **Estructura de carpetas**: `lugares/{uuid}.jpg`, `testimonios/{uuid}.jpg`, `testimonios-meta/{uuid}.json`.
 
 ### SES
@@ -314,40 +330,51 @@ module "ses" {
 }
 ```
 
-- Envia confirmaciones de reserva desde `antiturismo@benhub.cl`.
-- El dominio `benhub.cl` esta verificado en SES con registros DKIM configurados en Cloudflare externamente.
-- **Decision SES vs SNS**: SES es el servicio nativo de AWS para email transaccional. Para el volumen esperado (pocas reservas al dia), SES es esencialmente gratuito (62,000 emails/mes en free tier).
+- Envía confirmaciones de reserva desde `antiturismo@benhub.cl`.
+- El dominio `benhub.cl` está verificado en Amazon SES mediante registros DKIM configurados manualmente en Cloudflare de forma externa.
+- **Decisión SES vs SNS**: se utiliza Amazon SES debido a que es el servicio administrado de AWS diseñado para envío de correos electrónicos transaccionales. Para el volumen esperado de la aplicación (pocas reservas diarias), su costo es reducido y resulta suficiente para enviar confirmaciones sin necesidad de incorporar servicios adicionales.
 
 ### IAM
 
-**Rol de ejecucion ECS**:
+**Rol de ejecucion ECS**: ECS utiliza un rol de ejecución (`execution role`) que permite a las tareas Fargate interactuar con otros servicios de AWS necesarios durante su ejecución. Este rol utiliza una política `IAM` acotada a las operaciones requeridas:
 
 ```hcl
-module "iam_role" {
-  trust_policy_permissions = {
-    ecstasks = {
-      actions = ["sts:AssumeRole"]
-      principals = [{ type = "Service", identifiers = ["ecs-tasks.amazonaws.com"] }]
-    }
-  }
-  policies = { ecs_execution = module.iam_policy.arn }
+module "iam_policy" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+
+    Statement = [{
+      Effect = "Allow"
+
+      Action = [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+
+      Resource = "*"
+    }]
+  })
 }
 ```
 
-Con politica acotada a:
-- `ecr:GetAuthorizationToken`, `ecr:BatchCheckLayerAvailability`, `ecr:GetDownloadUrlForLayer`, `ecr:BatchGetImage` (pull de imagenes)
-- `logs:CreateLogStream`, `logs:PutLogEvents` (envio de logs a CloudWatch)
+La política permite:
+- `ecr:GetAuthorizationToken`, `ecr:BatchCheckLayerAvailability`, `ecr:GetDownloadUrlForLayer` y `ecr:BatchGetImage`: obtener autorización y descargar las imágenes de los contenedores desde Amazon ECR.
+- `logs:CreateLogStream` y `logs:PutLogEvents`: crear streams y enviar logs de ejecución hacia Amazon CloudWatch.
 
-**Roles Lambda**: cada funcion tiene politicas inline que solo permiten exactamente lo que necesita:
+**Roles Lambda**: cada función cuenta con permisos específicos según sus necesidades operativas:
 
 | Lambda | Permisos |
 |--------|----------|
-| lugares | `dynamodb:PutItem/GetItem/UpdateItem/DeleteItem/Scan` en tabla + indices, `s3:PutObject/GetObject` en bucket |
-| testimonios | `s3:PutObject/GetObject/ListBucket/DeleteObject` en bucket (no usa DynamoDB) |
-| booking | `dynamodb:PutItem` en tabla, `ses:SendEmail/SendRawEmail` en `*` |
-| S3-trigger | `dynamodb:PutItem/GetItem/Query`, `s3:PutObject/GetObject` |
+| lugares | `dynamodb:PutItem/GetItem/UpdateItem/DeleteItem/Scan` sobre la tabla correspondiente, además de `s3:PutObject/GetObject` para imágenes |
+| testimonios | `s3:PutObject/GetObject/ListBucket/DeleteObject` sobre el bucket de almacenamiento |
+| booking | `dynamodb:PutItem` para guardar reservas y `ses:SendEmail/SendRawEmail` para envío de correos |
+| S3-trigger | `dynamodb:PutItem/GetItem/Query` y permisos de lectura/escritura en `S3` |
 
-- **Decision**: principios de minimo privilegio. Cada Lambda solo puede acceder a los recursos y operaciones que necesita. No hay politicas con `*` salvo SES (donde el ARN de identidad verificado es dinamico).
+- **Decisión**: se aplica el principio de mínimo privilegio, otorgando a cada servicio únicamente los permisos necesarios para realizar sus funciones. Esto reduce la superficie de ataque y evita accesos innecesarios a recursos de AWS. Las políticas con recursos amplios (*) se mantienen únicamente en casos donde el recurso específico no puede definirse de forma estática, como el envío de correos mediante SES con identidades verificadas dinámicas.
 
 ### ECR
 
@@ -357,11 +384,11 @@ data "aws_ecr_repository" "web" {
 }
 ```
 
-- El repositorio ECR se creo manualmente fuera de Terraform (**data source**, no `resource`). Esto evita que un `terraform destroy` accidental elimine todas las imagenes Docker.
-- Las imagenes siguen versionado semantico: `v1.0.0`, `v1.0.1`, `v1.0.2`.
+- El repositorio ECR se creó manualmente fuera de Terraform (**`data source`**, no `resource`). Esto evita que un `terraform destroy` accidental elimine todas las imágenes Docker.
+- Las imágenes siguen versionado semantico: `v1.0.0`, `v1.0.1`, `v1.0.2`.
 - El tag de imagen activo se controla desde `terraform.tfvars` con `ecr_image_tag`.
 
-### CI/CD (docker_build.sh)
+### CI/CD (`docker_build.sh`)
 
 Script de bash que automatiza el build y despliegue:
 
@@ -378,7 +405,7 @@ aws ecs update-service --cluster $CLUSTER --service $SERVICE --force-new-deploym
 ```
 
 1. Lee el DNS del ALB desde `terraform output` (siempre actualizado).
-2. Lee el tag de imagen desde `terraform.tfvars` (unica fuente de verdad).
+2. Lee el tag de imagen desde `terraform.tfvars` (única fuente de verdad).
 3. Construye la imagen Docker con `--no-cache` para garantizar build fresco.
 4. Prueba localmente con `docker run` + `curl` (smoke test).
 5. Pushea a ECR y fuerza redeploy en ECS.
@@ -392,30 +419,32 @@ aws ecs update-service --cluster $CLUSTER --service $SERVICE --force-new-deploym
 |---------|--------------|----------------|----------|---------------------|
 | ECS Fargate (tareas) | 256 CPU + 512 MB RAM | CPU: $0.04048/h, RAM: $0.00445/GB/h | 2 tareas × 730h | ~$17.6 |
 | ALB | 1 balanceador activo | $0.0225/hora | 1 × 730h | $16.2 |
-| ALB LCU | Trafico bajo estimado | $0.008/LCU-hora | ~1 LCU | ~$5.8 |
+| ALB LCU | Tráfico bajo estimado | $0.008/LCU-hora | ~1 LCU | ~$5.8 |
 | NAT Gateway | 1 NAT | $0.045/hora | 1 × 730h | ~$32.4 |
 | Lambda | 4 funciones | $0.20/1M req + Free Tier | < 1M req/mes | ~$0 |
 | DynamoDB | On-demand | $1.25/1M WRU + $0.25/1M RRU | Carga baja | ~$0 |
 | S3 | ~1 GB almacenado | $0.023/GB/mes | 1 GB | ~$0.02 |
 | CloudWatch Logs | ~5 GB logs | $0.50/GB ingesta | 5 GB | $2.5 |
-| ECR | ~500 MB imagenes | $0.10/GB/mes | 0.5 GB | $0.05 |
+| ECR | ~500 MB imágenes | $0.10/GB/mes | 0.5 GB | $0.05 |
 | **Total estimado** | | | | **~$75/mes** |
 
 ### Comparacion con alternativa: EC2
 
 | Enfoque | Costo mensual | Mantenimiento | Escalabilidad |
 |---------|--------------|---------------|---------------|
-| **Fargate (actual)** | ~$58/mes | Ninguno (AWS gestiona) | Automatica (auto-scaling) |
-| EC2 t3.micro × 2 | ~$30/mes (instancias) + $16 ALB = $46 | SO, parches, Docker, seguridad | Manual (agregar instancias) |
+| **Fargate (actual)** | ~$58/mes | Ninguno (AWS gestiona) | Automática (auto-scaling) |
+| **EC2 t3.micro × 2** | ~$30/mes (instancias) + $16 ALB = $46 | SO, parches, Docker, seguridad | Manual (agregar instancias) |
 
-**Analisis**: Fargate cuesta aproximadamente $12/mes mas que EC2 en este escenario, pero elimina completamente la carga operativa: no hay que mantener servidores Linux, actualizar paquetes de seguridad, ni monitorear capacidad. Para un equipo de 2 personas y un proyecto academico, el ahorro en tiempo de operacion justifica ampliamente la diferencia de costo.
+**Análisis**: Fargate cuesta aproximadamente $12/mes más que EC2 en este escenario, pero elimina completamente la carga operativa: no hay que mantener servidores Linux, actualizar paquetes de seguridad, ni monitorear capacidad. Para un equipo de 2 personas y un proyecto académico, el ahorro en tiempo de operación justifica ampliamente la diferencia de costo.
 
-### Oportunidades de optimizacion
+### Oportunidades de optimización
 
-- **NAT Gateway**: es el componente mas caro (~$32/mes). Podria eliminarse si ECS se moviera a subnets publicas, pero se perderia el aislamiento de red. Alternativa: usar VPC Endpoints para ECR y CloudWatch (gratis/trafico bajo), eliminando la necesidad del NAT.
-- **Escalar a 1 tarea**: fuera del horario de la presentacion, `desired_count = 1` reduce el costo de Fargate a la mitad (~$8.8/mes).
-- **DynamoDB provisioned**: para carga predecible, capacidad provisionada (25 WCU/25 RCU) cuesta ~$12/mes vs on-demand, pero on-demand es $0 con trafico bajo.
-- **Lambda**: el Free Tier de AWS incluye 1 millon de invocaciones gratis al mes, por lo que el backend serverless tiene costo $0 para el volumen esperado.
+- **NAT Gateway**: es el componente con mayor costo de la infraestructura (~$32/mes). Una alternativa para reducir este costo sería utilizar VPC Endpoints para servicios como Amazon ECR, `S3` y `CloudWatch Logs`, disminuyendo la dependencia del NAT Gateway sin exponer las tareas ECS a Internet.
+- **Escalar a 1 tarea**: fuera de horarios de mayor utilización, `desired_count = 1` reduce aproximadamente a la mitad el costo asociado a ECS Fargate (de ~$18/mes a ~$9/mes), aunque disminuye la disponibilidad ante fallos.
+- **`DynamoDB` provisioned**: el modo **On-Demand** resulta la opción más conveniente para la carga esperada del proyecto, ya que evita pagar capacidad provisionada cuando el volumen de lecturas y escrituras es bajo.
+- **Lambda**: el Free Tier de AWS incluye 1 millón de invocaciones gratuitas al mes, por lo que, considerando el bajo volumen esperado de solicitudes, el costo del backend serverless será prácticamente nulo.
+
+\newpage
 
 ## e) Capturas
 
@@ -423,58 +452,65 @@ aws ecs update-service --cluster $CLUSTER --service $SERVICE --force-new-deploym
 
 ![Panel Admin Lugares](./src/AdminLugares.png)
 
-El panel permite crear, editar y eliminar lugares con imagenes. Cada lugar pertenece a un recorrido (ej: "Pasado", "Marzo") y tiene orden de aparicion.
+El panel permite crear, editar y eliminar lugares con imágenes. Cada lugar pertenece a un recorrido (ej: "Pasado", "Marzo") y tiene orden de aparición.
 
+\newpage
 ### Moderacion de Testimonios
 
 ![Panel Admin Testimonios](./src/AdminTestimonios.png)
 
-El administrador puede aprobar, rechazar o eliminar testimonios enviados por usuarios. Solo los aprobados aparecen en el carrusel publico.
+El administrador puede aprobar, rechazar o eliminar testimonios enviados por usuarios. Solo los aprobados aparecen en el carrusel público.
 
-### Sitio web publico
+\newpage
+### Sitio web público
 
 ![Sitio web AntiTurismo](./src/SitioWeb.png)
 
 La landing page muestra el hero, lugares filtrados por recorrido, carrusel de testimonios aprobados, y formulario de reserva.
 
+\newpage
 ### ECS corriendo
 
 ![ECS Service Running](./src/ECSService.png)
 
-El servicio ECS mantiene 2 tareas en ejecucion sobre 2 zonas de disponibilidad. El ALB distribuye trafico entre ambas.
+El servicio ECS mantiene 2 tareas en ejecución sobre 2 zonas de disponibilidad. El ALB distribuye tráfico entre ambas.
 
+\newpage
 ### Repositorio ECR
 
 ![ECR Repository](./src/ECR.png)
 
-Las imagenes Docker se versionan con tags semanticos (`v1.0.0`, `v1.0.1`, `v1.0.2`). Cada nuevo despliegue genera una imagen inmutable.
+Las imágenes Docker se versionan con tags semanticos (`v1.0.0`, `v1.0.1`, `v1.0.2`). Cada nuevo despliegue genera una imagen inmutable.
 
-### Lambda Functions
+\newpage
+### Funciones Lambda
 
 ![Funciones Lambda](./src/LambdaFunctions.png)
 
-Las 4 funciones Lambda procesan APIs REST sin servidores. Cada una tiene politicas IAM acotadas a los recursos minimos necesarios.
+Las 4 funciones Lambda procesan APIs REST sin servidores. Cada una tiene políticas `IAM` acotadas a los recursos mínimos necesarios.
 
+\newpage
 ## f) Conclusiones
 
-La arquitectura implementada combina contenedores (ECS Fargate) para el frontend y funciones serverless (Lambda) para el backend, logrando un sistema **end-to-end funcional, escalable y seguro** desplegado completamente en AWS.
+La arquitectura implementada combina contenedores (ECS Fargate) para el frontend y funciones serverless (Lambda) para el backend, logrando un sistema **end-to-end funcional, con una arquitectura diseñada para escalar y siguiendo buenas prácticas de seguridad**. Toda la solución se encuentra desplegada sobre AWS.
 
-**Fortalezas de la solucion**:
+**Fortalezas de la solución**:
 
-1. **Infraestructura como Codigo**: cada recurso AWS esta definido en Terraform, permitiendo recrear el entorno completo en minutos con `terraform apply`. El estado remoto en S3 permite colaboracion entre desarrolladores.
+1. **Infraestructura como Código**: cada recurso AWS está definido en Terraform, permitiendo recrear el entorno completo en minutos con `terraform apply`. El estado remoto en `S3` permite colaboración entre desarrolladores.
 
-2. **Alta disponibilidad**: los componentes criticos (ALB, ECS, DynamoDB) operan en al menos 2 zonas de disponibilidad. Si una AZ falla, el servicio continua funcionando.
+2. **Alta disponibilidad**: La infraestructura distribuye el ALB y las tareas ECS entre dos zonas de disponibilidad, mejorando la tolerancia a fallos. `DynamoDB`, al ser un servicio administrado de AWS, proporciona alta disponibilidad de forma nativa.
 
-3. **Seguridad por capas**: los recursos de computo (ECS, Lambda) no estan expuestos directamente a internet. Solo el ALB tiene acceso publico, y las tareas ECS corren en subnets privadas sin IP publica.
+3. **Seguridad por capas**: los recursos de cómputo (ECS, Lambda) no estan expuestos directamente a internet. Solo el ALB tiene acceso público, y las tareas ECS corren en subnets privadas sin IP pública.
 
-4. **Serverless donde aplica**: las APIs usan Lambda (pago por uso, escala a cero), mientras que el frontend usa contenedores (necesario para servir el SPA con Nginx). Esta combinacion optimiza costos para la carga esperada.
+4. **Serverless donde aplica**: las APIs usan Lambda (pago por uso, escala a cero), mientras que el frontend usa contenedores (adecuado para desplegar la aplicación React mediante un contenedor web). Esta combinación optimiza costos para la carga esperada.
 
-5. **Minimo privilegio IAM**: cada Lambda y el rol de ejecucion ECS tienen permisos acotados a exactamente lo que necesitan. No hay politicas con `*` indiscriminado.
+5. **Mínimo privilegio `IAM`**: cada función Lambda y el rol de ejecución de ECS cuentan únicamente con los permisos necesarios para realizar sus funciones, aplicando el principio de mínimo privilegio y reduciendo la superficie de ataque.
 
 **Mejoras futuras**:
 
-- Agregar HTTPS mediante certificado ACM y listener en puerto 443.
-- Migrar autenticacion del panel admin al backend (JWT o API Key en Lambda) para eliminar la validacion client-side.
-- Implementar CI/CD con GitHub Actions para construir y desplegar automaticamente al hacer push a `main`.
-- Agregar CloudFront como CDN para los assets estaticos, reduciendo latencia y carga al ALB.
-- Activar auto-scaling de ECS (`enable_autoscaling = true`) para manejar picos de trafico.
+- Agregar HTTPS mediante certificado `ACM` y listener en puerto 443.
+- Migrar autenticación del panel admin al backend (`JWT` o `API Key` en Lambda) para eliminar la validación client-side.
+- Implementar CI/CD con `GitHub Actions` para construir y desplegar automáticamente al hacer push a `main`.
+- Agregar `CloudFront` como CDN para los assets estáticos, reduciendo latencia y carga al ALB.
+- Activar auto-scaling de ECS (`enable_autoscaling = true`) para manejar picos de tráfico.
+- Implementar VPC Endpoints para ECR, `S3` y `CloudWatch Logs`, reduciendo la dependencia del NAT Gateway y disminuyendo costos operacionales.
